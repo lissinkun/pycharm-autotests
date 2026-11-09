@@ -26,7 +26,7 @@ POST лишь имитирует создание: запись не сохра�
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
 .\.venv\Scripts\python.exe -m pytest -v
 ```
 
@@ -40,7 +40,17 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pytest tests/test_users.py::test_get_existing_user -v
 ```
 
-Зависимости ограничены совместимыми диапазонами версий; это ещё не lock-файл.
+`requirements.txt` описывает допустимые диапазоны прямых зависимостей.
+`requirements-lock.txt` фиксирует проверенные точные версии, включая зависимости
+самих библиотек. Для обычной установки и CI используем lock-файл.
+`colorama` требуется pytest на Windows и отмечена условием платформы;
+на Linux эта строка пропускается.
+
+При обновлении зависимостей установи их из `requirements.txt` в отдельное
+чистое окружение, проверь `pip freeze`, обнови lock-файл и выполни Ruff,
+pytest и CI. Не перезаписывай lock-файл выводом `pip freeze` из окружения
+со сторонними инструментами: в него попадут лишние библиотеки.
+Точные версии не фиксируют ОС и Python; CI использует Python 3.13 на Ubuntu.
 
 ## Как устроен тест
 
@@ -66,6 +76,7 @@ clients/users_client.py — методы запросов к API пользов�
 clients/__init__.py  — обозначает пакет clients
 settings.py         — адрес API и таймаут из переменных окружения
 requirements.txt    — зависимости
+requirements-lock.txt — проверенные точные версии зависимостей
 pyproject.toml      — правила проверки и форматирования Ruff
 pytest.ini          — папка поиска тестов и параметры вывода
 .gitignore          — локальные файлы, исключённые из Git
@@ -170,7 +181,7 @@ Python из `.venv`, как показано выше.
 
 ## Качество кода: Ruff
 
-Ruff устанавливается из `requirements.txt` в окружение проекта.
+Ruff устанавливается из `requirements-lock.txt` в окружение проекта.
 Настройки находятся в `pyproject.toml`: целевая версия Python 3.10,
 длина строки для форматтера 88, базовые проверки ошибок и порядка импортов.
 
@@ -223,7 +234,7 @@ allure serve "C:\путь\к\распакованным\allure-results"
 ## Allure-отчёт
 
 Python-плагин `allure-pytest` сохраняет результаты тестов. Он устанавливается
-из `requirements.txt`. Отдельная программа Allure CLI строит из них сайт;
+из `requirements-lock.txt`. Отдельная программа Allure CLI строит из них сайт;
 для Allure CLI 2 нужна Java. На текущем компьютере обе программы уже установлены.
 Проверка доступности: `allure --version` и `java -version`.
 
